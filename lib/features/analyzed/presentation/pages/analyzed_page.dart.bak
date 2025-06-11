@@ -1,0 +1,290 @@
+import 'dart:io';
+import 'dart:math';
+import 'package:chili_disease_detection/shared/misc/formatters.dart';
+import 'package:chili_disease_detection/shared/misc/global_variables.dart';
+import 'package:chili_disease_detection/shared/widgets/card/card_container.dart';
+import 'package:chili_disease_detection/shared/widgets/card/color_opacity_container.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
+import 'package:chili_disease_detection/core/router/route_path.dart';
+import 'package:chili_disease_detection/core/tensorflow/tensorflow.dart';
+import 'package:chili_disease_detection/core/theme/theme.dart';
+import 'package:chili_disease_detection/injector.dart';
+import 'package:chili_disease_detection/shared/extensions/context_extension.dart';
+
+class AnalyzedPage extends StatefulWidget {
+  final ResultClassModel result;
+  const AnalyzedPage({super.key, required this.result});
+
+  @override
+  State<AnalyzedPage> createState() => _AnalyzedPageState();
+}
+
+class _AnalyzedPageState extends State<AnalyzedPage> {
+  void _onTapPreview(File file) {
+    getRouter.push(RoutePath.fullScreenImageViewPath, extra: file);
+  }
+
+  void _onTapNewFoto() {
+    getRouter.push(RoutePath.imagePickerPath);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: _buildAppBar(context),
+      body: Stack(
+        children: [
+          _buildBackground(context),
+          DraggableScrollableSheet(
+            initialChildSize: 0.65,
+            minChildSize: 0.65,
+            maxChildSize: 0.85,
+            snap: true,
+
+            builder: (context, scrollController) {
+              return Container(
+                padding: const EdgeInsets.only(top: 20),
+                decoration: BoxDecoration(
+                  color: context.themeColors.appContainerBackground,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                  border: Border(
+                    top: BorderSide(
+                      width: 0.5,
+                      color: context.themeColors.border,
+                    ),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 5,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: context.themeColors.hintColor,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    Expanded(child: _buildContent(scrollController)),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  AppBar _buildAppBar(BuildContext context) {
+    return AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 15),
+        child: CircleAvatar(
+          backgroundColor: context.theme.scaffoldBackgroundColor.withValues(
+            alpha: 0.5,
+          ),
+          child: IconButton(
+            icon: Icon(
+              Platform.isIOS ? Icons.arrow_back_ios_new : Icons.arrow_back,
+              color: context.themeColors.fontColor,
+            ),
+            onPressed: () => context.pop(),
+          ),
+        ),
+      ),
+      title: Text(Formatters.formatSelectedResultName(widget.result.selected)),
+    );
+  }
+
+  Widget _buildBackground(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        _onTapPreview(widget.result.imageFile);
+      },
+      child: Container(
+        height: context.fullHeight * 0.4,
+        width: context.fullWidth,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            fit: BoxFit.cover,
+            image: FileImage(widget.result.imageFile),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContent(ScrollController scrollController) {
+    final classDescription = Formatters.classDescription(
+      widget.result.selected,
+    );
+    final classImagesOtherPath = Formatters.classImagesOtherPath(
+      widget.result.selected,
+    );
+    return ListView(
+      padding: AppPadding.all,
+      shrinkWrap: true,
+      controller: scrollController,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              Formatters.formatSelectedResultName(widget.result.selected),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            Spacer(),
+            CircleAvatar(
+              radius: 18,
+              backgroundImage: FileImage(widget.result.imageFile),
+            ),
+          ],
+        ),
+        Text(
+          "Model: ${GlobalVariables.algorithm}",
+          style: context.textStyle.subtitle,
+        ),
+
+        SizedBox(height: 10.0),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            spacing: 12,
+            children: [
+              _subItem(
+                "Akurasi:",
+                ColorOpacityContainer(
+                  fontSize: 15,
+                  text: Formatters.formatAccuracy(widget.result.accuracy),
+                  color: Formatters.colorAccuracy(
+                    context,
+                    widget.result.accuracy,
+                  ),
+                ),
+              ),
+              _subItem(
+                "Tanggal:",
+                ColorOpacityContainer(
+                  fontSize: 15,
+                  text: Formatters.formatDateOnly(widget.result.lastUpdated),
+                  color: context.themeColors.selectedLabel,
+                ),
+              ),
+              _subItem(
+                "Waktu:",
+                ColorOpacityContainer(
+                  fontSize: 15,
+                  text: Formatters.formatTimeOnly(widget.result.lastUpdated),
+                  color: context.themeColors.selectedLabel,
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 14.0),
+        Text("Deskripsi:", style: context.textStyle.title),
+        SizedBox(height: 8.0),
+        ...List.generate(classDescription.length, (index) {
+          final item = classDescription[index];
+          return ListTile(
+            dense: true,
+            titleAlignment: ListTileTitleAlignment.titleHeight,
+            horizontalTitleGap: 4.0,
+            leading: Icon(
+              Icons.circle,
+              size: 10,
+              color: context.themeColors.unselectedLabel,
+            ),
+            title: Text(item, style: context.textStyle.body),
+          );
+        }),
+
+        SizedBox(height: 16.0),
+        Text(
+          "Lainnya tentang ${Formatters.formatSelectedResultName(widget.result.selected)}:",
+          style: context.textStyle.title,
+        ),
+        SizedBox(height: 18.0),
+        SizedBox(
+          height: 120,
+          width: context.fullWidth,
+          child: ListView.separated(
+            padding: EdgeInsets.zero,
+            scrollDirection: Axis.horizontal,
+            separatorBuilder: (context, index) => SizedBox(width: 12.0),
+            itemCount: classImagesOtherPath.length,
+            itemBuilder: (context, index) {
+              final item = classImagesOtherPath[index];
+              return GestureDetector(
+                onTap: () async {
+                  final byteData = await rootBundle.load(item);
+                  final randomNumber = Random().nextInt(1000000);
+                  final file = File(
+                    '${Directory.systemTemp.path}/image_${widget.result.lastUpdated}_$randomNumber',
+                  );
+                  await file.writeAsBytes(byteData.buffer.asUint8List());
+                  _onTapPreview(file);
+                },
+                child: Container(
+                  width: 200,
+                  decoration: BoxDecoration(
+                    borderRadius: AppBorderRadius.medium,
+                    image: DecorationImage(
+                      fit: BoxFit.cover,
+                      image: AssetImage(item),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+
+        SizedBox(height: 24.0),
+        CardContainer(
+          onTap: _onTapNewFoto,
+          color: context.themeColors.primaryColor,
+          height: 45,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(Icons.camera_alt, color: context.themeColors.whiteColor),
+              SizedBox(width: 8.0),
+              Text(
+                "Ambil Foto Baru",
+                style: TextStyle(
+                  color: context.themeColors.whiteColor,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 16.0),
+      ],
+    );
+  }
+
+  Widget _subItem(String title, Widget subtitle) {
+    return Row(
+      children: [
+        Text(title, style: context.textStyle.subtitle),
+        SizedBox(width: 6.0),
+        subtitle,
+      ],
+    );
+  }
+}
