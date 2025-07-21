@@ -29,7 +29,7 @@ class _AboutPageState extends State<AboutPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Info")),
+      appBar: AppBar(title: const Text("Info")),
       body: Scrollbar(
         controller: _scrollController,
         child: SingleChildScrollView(
@@ -53,7 +53,7 @@ class _AboutPageState extends State<AboutPage> {
                     ),
                   ],
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 ContainerWithSubItem(
                   title: "Overview Model",
                   listWidget: [
@@ -66,6 +66,10 @@ class _AboutPageState extends State<AboutPage> {
                       subtitle: "CNN (Convolutional Neural Network)",
                     ),
                     ItemWidgetContainer(
+                      title: "Optimizer",
+                      subtitle: "Adam (Adaptive Moment Estimation)",
+                    ),
+                    ItemWidgetContainer(
                       title: "Ukuran Input Gambar",
                       subtitle: "224 x 224",
                     ),
@@ -76,7 +80,7 @@ class _AboutPageState extends State<AboutPage> {
                     ),
                   ],
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 ContainerWithSubItem(
                   title: "Training Model",
                   listWidget: [
@@ -87,26 +91,26 @@ class _AboutPageState extends State<AboutPage> {
                     ),
                     ItemWidgetContainer(
                       title: "Akurasi Training",
-                      subtitle: "91.86 %",
+                      subtitle: "92.94 %",
                     ),
                     ItemWidgetContainer(
                       title: "Area under curve (AUC)",
-                      subtitle: "0.9922",
+                      subtitle: "0.9904",
                     ),
                     ItemWidgetContainer(
                       title: "Precision (avg)",
                       subtitle:
-                          "Healthy: 0.98\nLeaf Curling: 0.92\nLeaf Spot: 0.90\nLeaf Yellowing: 0.89",
+                          "Healthy: 0.93\nLeaf Curling: 0.95\nLeaf Spot: 0.96\nLeaf Yellowing: 0.88",
                     ),
                     ItemWidgetContainer(
                       title: "Recall (avg)",
                       subtitle:
-                          "Healthy: 0.92\nLeaf Curling: 0.94\nLeaf Spot: 0.92\nLeaf Yellowing: 0.89",
+                          "Healthy: 0.98\nLeaf Curling: 0.88\nLeaf Spot: 0.92\nLeaf Yellowing: 0.94",
                     ),
                     ItemWidgetContainer(
                       title: "F1-score (avg)",
                       subtitle:
-                          "Healthy: 0.95\nLeaf Curling: 0.93\nLeaf Spot: 0.91\nLeaf Yellowing: 0.89",
+                          "Healthy: 0.95\nLeaf Curling: 0.91\nLeaf Spot: 0.94\nLeaf Yellowing: 0.91",
                     ),
                   ],
                 ),

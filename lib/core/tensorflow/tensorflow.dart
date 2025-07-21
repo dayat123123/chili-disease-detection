@@ -48,13 +48,13 @@ class Tensorflow {
 
   Future<Result<ResultClassModel>> analyzeData(File file) async {
     if (!_isInitialized || _interpreter == null) {
-      return Result.failed("Interpreter belum dimuat");
+      return const Result.failed("Interpreter belum dimuat");
     }
 
     try {
       final bytes = await file.readAsBytes();
       final image = img.decodeImage(bytes);
-      if (image == null) return Result.failed("Gagal decode gambar.");
+      if (image == null) return const Result.failed("Gagal decode gambar.");
 
       final resized = img.copyResize(
         image,

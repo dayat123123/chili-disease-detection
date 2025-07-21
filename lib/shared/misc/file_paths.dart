@@ -15,6 +15,7 @@ class FilePaths {
   static const String yellow = "$_imagesPath/yellow.jpg";
   static const String curly = "$_imagesPath/curly.jpg";
 
-  static const String modelTFLite =
-      "$_tensorflowPath/model_cabai_20250528.tflite";
+  // static const String modelTFLite =
+  //     "$_tensorflowPath/model_cabai_20250528.tflite";
+  static const String modelTFLite = "$_tensorflowPath/model_cabai_adamW.tflite";
 }
